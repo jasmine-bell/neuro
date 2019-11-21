@@ -1,0 +1,78 @@
+import matplotlib.pyplot as plt
+import scipy.fftpack
+import numpy as np
+import pyabf
+abf = pyabf.ABF("/Users/jasminebell/desktop/14617303.abf")
+abf.setSweep(0)
+plt.plot(abf.sweepX, abf.sweepY)
+plt.show()
+
+import pandas
+stim_file = pandas.read_csv('/Users/jasminebell/Downloads/ZAP_command.csv', names = ['time', 'current'], header = None)
+
+N = len(abf.sweepY)
+T = 0.0001
+x = np.linspace(0.0, N*T, N)
+y = abf.sweepY
+yf_response = scipy.fftpack.fft(y)
+xf = np.linspace(0.0, 1.0/(2.0*T), N/2)
+y_subset = yf_response[1:450]
+x_subset = xf[1:450]
+y = stim_file['current']
+yf_stim = scipy.fftpack.fft(y)
+xf = np.linspace(0.0, 1.0/(2.0*T), N/2)
+y_subset = yf_stim[1:450]
+x_subset = xf[1:450]
+fig, ax = plt.subplots()
+ax.plot(x_subset, 2.0/N * np.abs(y_subset[:N//2]))
+plt.show()
+
+impedance = np.divide(yf_response[1:350], yf_stim[1:350])
+
+y_subset = yf_stim[1:350]
+x_subset = xf[1:350]
+fig, ax = plt.subplots()
+ax.plot(x_subset, 2.0/N * np.abs(impedance[:N//2]))
+plt.show()
+
+file_names = ['14617303', '14617304', '14617305','14617308','14617308']
+full_file_path = []
+
+for x in range(0, len(file_names)):
+    curr_full_file_path = "/Users/jasminebell/desktop/" + file_names[x] + '.abf'
+    full_file_path.append(curr_full_file_path)
+full_file_path
+
+impedance_matrix = np.zeros((349, 10))
+
+for i in range(0, len(full_file_path)):
+    curr_file_path = full_file_path[i]
+    print(curr_file_path)
+    abf = pyabf.ABF(curr_file_path)
+    abf.setSweep(0)
+    plt.plot(abf.sweepX, abf.sweepY)
+    plt.show()
+    N = len(abf.sweepY)
+    T = 0.0001
+    x = np.linspace(0.0, N*T, N)
+    y = abf.sweepY
+    yf_response = scipy.fftpack.fft(y)
+    impedance = np.divide(yf_response[1:350], yf_stim[1:350])
+    xf = np.linspace(0.0, 1.0/(2.0*T), N/2)
+    y_subset = yf_stim[1:350]
+    x_subset = xf[1:350]
+    fig, ax = plt.subplots()
+    ax.plot(x_subset, 2.0/N * np.abs(impedance[:N//2]))
+    plt.show()
+    
+    print((impedance.shape))
+    print(x)
+    impedance_matrix[:, i] = impedance
+  
+  mean_impedance = np.mean(impedance_matrix, axis = 1)
+  
+  x_subset = xf[1:350]
+fig, ax = plt.subplots()
+ax.plot(x_subset, mean_impedance[:N//2])
+plt.show()
+
